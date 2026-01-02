@@ -1,0 +1,579 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VO₂ Max & DHEA Alchemist</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+    .container {
+      width: 94%;
+      max-width: 480px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      height: 100%;
+    }
+    h1 {
+      font-size: 1.4rem;
+      margin: 0 0 10px 0;
+      background: linear-gradient(to right, #60a5fa, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .phase {
+      font-size: 0.9rem;
+      color: #93c5fd;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 5px;
+    }
+    .movement {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 5px 0;
+      color: #fff;
+      min-height: 3.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .timer {
+      font-size: 4.5rem;
+      font-weight: 300;
+      margin: 10px 0;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+    .description {
+      font-size: 0.95rem;
+      opacity: 0.9;
+      line-height: 1.5;
+      background: rgba(255,255,255,0.05);
+      padding: 12px;
+      border-radius: 12px;
+      margin: 10px 0;
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .bandha {
+      font-size: 0.9rem;
+      color: #a7f3d0;
+      font-weight: 500;
+      margin-bottom: 10px;
+    }
+    .next {
+      font-size: 0.85rem;
+      opacity: 0.6;
+      margin-top: 5px;
+      min-height: 1.2rem;
+    }
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .controls button {
+      padding: 14px 20px;
+      font-size: 1.1rem;
+      border-radius: 14px;
+      border: none;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: transform 0.1s, opacity 0.2s;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+    .controls button:active {
+      transform: scale(0.96);
+    }
+    .secondary {
+      background: #334155 !important;
+      box-shadow: none !important;
+    }
+    #progressWrapper {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      padding: 20px 5%;
+      box-sizing: border-box;
+      background: linear-gradient(to top, #0f172a 20%, transparent);
+    }
+    #progressTime {
+      text-align: center;
+      font-size: 0.8rem;
+      opacity: 0.7;
+      margin-bottom: 8px;
+    }
+    #progressContainer {
+      width: 100%;
+      height: 6px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    #progressBar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(to right, #38bdf8, #818cf8);
+      border-radius: 6px;
+      transition: width 1s linear;
+    }
+    #wakelock {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1px;
+      height: 1px;
+      opacity: 0.01;
+      pointer-events: none;
+    }
+    /* Selection Screen Styles */
+    #selectionScreen {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+      padding: 20px 0;
+    }
+    #selectionScreen button {
+      padding: 16px;
+      font-size: 1.1rem;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      color: #e5e7eb;
+      width: 100%;
+      box-sizing: border-box;
+      cursor: pointer;
+    }
+    #selectionScreen button:hover,
+    #selectionScreen button:active {
+      background: #2563eb;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="mainContainer" style="display:none;">
+    <h1 id="title">⚡ VO₂ Max & DHEA Alchemist</h1>
+    <div class="phase" id="phase"></div>
+    <div class="movement" id="movement"></div>
+    <div class="timer" id="timer">00:00</div>
+    <div class="description" id="description"></div>
+    <div class="bandha" id="bandha"></div>
+    <div class="next" id="next"></div>
+    <div class="controls">
+      <button class="secondary" onclick="prev()">⏮ Prev</button>
+      <button id="btnStart" onclick="start()">▶ Start</button>
+      <button id="btnPause" onclick="pause()" style="display:none; background:#ef4444;">⏸ Pause</button>
+      <button class="secondary" onclick="next(false)">Next ⏭</button>
+    </div>
+    <div class="controls" style="margin-top:10px;">
+      <button class="secondary" onclick="showSelection()" style="font-size:0.9rem; padding:10px 16px; background:transparent !important; border:1px solid #334155;">← Change Routine</button>
+      <button class="secondary" onclick="reset()" style="font-size:0.9rem; padding:10px 16px; background:transparent !important; border:1px solid #334155;">🔄 Reset</button>
+    </div>
+  </div>
+
+  <div class="container" id="selectionScreen">
+    <h1>⚡ VO₂ Max & DHEA Alchemist</h1>
+    <p style="font-size:1rem; opacity:0.8; margin:0 0 20px;">Select Your Routine (Equipment Enhanced)</p>
+    <div class="controls" style="flex-direction:column; gap:12px;">
+      <!-- Buttons injected by JS -->
+    </div>
+  </div>
+
+  <div id="progressWrapper">
+    <div id="progressTime"></div>
+    <div id="progressContainer">
+      <div id="progressBar"></div>
+    </div>
+  </div>
+
+  <video id="wakelock" loop muted playsinline>
+    <source src="data:video/mp4;base64,AAAAHGZ0eXBpc29tAAACAGlzb20AAABtb292AAAAAGxtdmhkAAAAAAAAAAAAAAAAAAAD6AAAA+gAAQAAAQAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAAABkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" type="video/mp4">
+  </video>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(err => console.log('Service Worker registration failed:', err));
+    }
+
+    const practices = [
+      // 0: The Morning Alchemist (Original) – ~20 min (Added RR for release, PB for coherence if available)
+      [
+        { "phase": "Phase 1: Awakening & Release", "steps": [
+          {"name": "Sacred Shaking", "time": 90, "desc": "Shake entire body, emphasizing heels. Visualize cortisol leaving as dark dust through fingertips/soles.", "bandha": "Deep Nasal Inhale, Audible 'Ahhh' Exhale"},
+          {"name": "Thymus Tapping", "time": 30, "desc": "Tap center of chest (4th Chakra). Smile softly to signal safety and immune activation to the body.", "bandha": "Dr. Dispenza Heart Center Activation"},
+          {"name": "Door of Life Swing", "time": 60, "desc": "Rotate torso side to side. Hands strike kidneys (lower back) and abdomen freely.", "bandha": "Energetic Pathway Opening"},
+          {"name": "RR: Thoracic Extension", "time": 90, "desc": "Lie back on Rumbler Roller (upper back). Hands behind head. Extend back over roller, crunch up. Move slightly up/down (optional enhancement).", "bandha": "Relaxed Breath"}
+        ]},
+        { "phase": "Phase 2: The Electric Spine", "steps": [
+          {"name": "Spinal Flex", "time": 120, "desc": "Inhale arch forward, exhale round back. Increase speed.", "bandha": "Light Mula Bandha"},
+          {"name": "Breath of Fire & Squeeze", "time": 120, "desc": "Arms 60°. Rapid nose breath. End: Squeeze root, energy to brain.", "bandha": "Mula + Uddiyana"}
+        ]},
+        { "phase": "Phase 3: Flow State (VO2 Max)", "steps": [
+          {"name": "Beast Flow Round 1", "time": 240, "desc": "Down Dog → Wave → Loaded Beast → Step Through → Crab.", "bandha": "Core Engaged"},
+          {"name": "Beast Flow Round 2", "time": 240, "desc": "Faster tempo. Explosive movements. Ujjayi breath.", "bandha": "Core Engaged"}
+        ]},
+        { "phase": "Phase 4: Coherence", "steps": [
+          {"name": "Heart Coherence", "time": 180, "desc": "Inhale 5s, Exhale 5s through chest center.", "bandha": "Heart Focus"},
+          {"name": "PB: Passive Dead Hang", "time": 60, "desc": "Hang from pull-up bar. Relax shoulders up to ears. Decompress spine. Deep belly breaths (optional enhancement).", "bandha": "Long Deep Breathing"},
+          {"name": "Elevated Emotion", "time": 120, "desc": "Feel Gratitude as if it already happened.", "bandha": "Emotional Lock"}
+        ]}
+      ],
+      // 1: Day 1: Upper Body Focus – ~35 min (Integrated PB for pull-ups, DB for presses/rows, RR for warm-up)
+      [
+        { "phase": "Warm-Up", "steps": [
+          {"name": "Shoulder Circles & Lymph Tapping", "time": 180, "desc": "Seated or standing: Shoulder circles clockwise/counterclockwise (1 min each). Then gentle fingertip tapping on collarbones, underarms, neck (20 taps each). Deep nasal breathing.", "bandha": "Light Mula Bandha"},
+          {"name": "RR: Lats Roll-out", "time": 120, "desc": "Lie on side. Roller under armpit/lat. Roll slowly. Find trigger points and hold (1 min each side).", "bandha": "Relaxed Breath"}
+        ]},
+        { "phase": "Main Flow", "steps": [
+          {"name": "Vinyasa x Animal Flow Fusion", "time": 480, "desc": "4 rounds: Child's Pose → Cobra → Downward Dog → Loaded Beast (8-10 explosive pushes) → Crab Reach (5 each side). Seamless flow with Ujjayi breath.", "bandha": "Mula + Uddiyana + Jalandhara in holds"},
+          {"name": "PB: Strict Pull-Ups", "time": 300, "desc": "3 sets: 8-12 reps. Between sets: Breath of Fire 30-45s. Focus on driving elbows down.", "bandha": "Mula + Uddiyana during Breath of Fire"},
+          {"name": "DB: Overhead Press", "time": 240, "desc": "Standing or Seated. 3 Sets x 8-12 reps. Keep core tight, don't arch back excessively. Controlled eccentric.", "bandha": "Uddiyana Engagement"},
+          {"name": "DB: Bent Over Rows", "time": 240, "desc": "Hinge at hips. Flat back. Pull DBs to hip pocket. 3 Sets x 10-12 reps. Squeeze blades.", "bandha": "Strong Mula Bandha"},
+          {"name": "Qigong Upper Body Wave", "time": 180, "desc": "Standing body wave focusing on upper torso undulations. Continuous ripple from knees to arms.", "bandha": "Relax Bandhas for Flow"}
+        ]},
+        { "phase": "Cool-Down", "steps": [
+          {"name": "Supine Twist & Meditation", "time": 240, "desc": "Lie down: Knees to chest, drop to sides (30s each). Then seated meditation chanting 'Sat Nam' internally.", "bandha": "Release All Bandhas"},
+          {"name": "PB: Hanging Scapular Shrugs", "time": 60, "desc": "Hang from bar. Keep arms straight. Elevate and depress scapula only.", "bandha": "Controlled Motion"}
+        ]}
+      ],
+      // 2: Day 2: Lower Body Focus – ~40 min (Integrated DB for squats/lunges, RR for warm-up, PB for leg raises)
+      [
+        { "phase": "Warm-Up", "steps": [
+          {"name": "Hip Circles & Lymph Drainage", "time": 240, "desc": "Standing: Large hip circles clockwise/counterclockwise (2 min each). Tap inner thighs/groin. Figure-8 hip rocks.", "bandha": "Mula Bandha Active"},
+          {"name": "RR: Quads & IT Band", "time": 180, "desc": "Roll front of thighs and outer thighs. Breathe through pain/tension. 90s each leg.", "bandha": "Deep Breathing"}
+        ]},
+        { "phase": "Main Flow", "steps": [
+          {"name": "Animal Flow x Vinyasa Lower Focus", "time": 480, "desc": "4 rounds: Beast Pose crawl → Skandasana (hold 10s each) → Warrior II → Three-Legged Dog → Pistol Squat (5-8 each leg). Fast pace.", "bandha": "Uddiyana + Mula"},
+          {"name": "DB: Goblet Squats", "time": 300, "desc": "Hold one DB at chest. Deep squat. Heels down. 4 Sets x 10-12 reps. Rest as needed.", "bandha": "Mula on ascent"},
+          {"name": "DB: Reverse Lunges", "time": 240, "desc": "Hold DBs at sides. Step back. Knee kiss floor. 3 Sets x 10 each leg.", "bandha": "Stability Focus"},
+          {"name": "PB: Hanging Leg Raises", "time": 300, "desc": "3 sets: 10-12 raises (knees or straight legs). Core tight. Control the swing (no kipping).", "bandha": "Uddiyana Dominant"},
+          {"name": "Qigong Leg Shake & Circles", "time": 240, "desc": "Vigorous leg shaking (2 min). Wide stance hip circles.", "bandha": "No Bandhas"}
+        ]},
+        { "phase": "Cool-Down", "steps": [
+          {"name": "Pigeon Pose & Abdominal Breathing", "time": 240, "desc": "Pigeon each side (45s). Then 4-7-8 breathing meditation.", "bandha": "Release Bandhas"},
+          {"name": "RR: Glute Release", "time": 60, "desc": "Sit on roller (one glute). Cross ankle over knee. Roll deep into muscle belly.", "bandha": "Relaxed"}
+        ]}
+      ],
+      // 3: Day 3: Full Body Integration – ~45 min (Integrated all equipment: PB for circuits, DB for thrusters, RR for cool-down)
+      [
+        { "phase": "Warm-Up", "steps": [
+          {"name": "Sun Salutation with Wrist Prep", "time": 180, "desc": "3 fluid Sun Salutation A rounds. Add wrist circles in quadruped.", "bandha": "Light Core Engagement"},
+          {"name": "RR: T-Spine Opener", "time": 120, "desc": "Roller mid-back. Arms overhead. Touch floor with back of hands if possible. Hold.", "bandha": "Heart Open"}
+        ]},
+        { "phase": "Main Flow", "steps": [
+          {"name": "Advanced Vinyasa x Animal Flow", "time": 720, "desc": "5 quick rounds: Down Dog → Loaded Beast → Crab Reach → Warrior III → Half Moon (hold 10s). Add jumps.", "bandha": "All Bandhas in Balances"},
+          {"name": "PB/DB: Burpee-Pullup-Thruster Circuit", "time": 600, "desc": "4 rounds: 8 burpees (tuck jump) → 8 pull-ups (PB) → 10 DB Thrusters (Squat+Press) → Animal Flow Pivot (5 each direction).", "bandha": "Full Bandhas in Pivots"},
+          {"name": "Kundalini Body Wave", "time": 300, "desc": "Standing Breath of Fire 45s → Full spine wave (3 min).", "bandha": "Mula + Uddiyana"},
+          {"name": "Full Body Qigong Tapping", "time": 300, "desc": "Tap from feet to head, focusing TCM points.", "bandha": "Relax for Detox"},
+          {"name": "DB: Farmer's Carry", "time": 180, "desc": "Hold heavy DBs. Walk with perfect posture. Shoulders back. Don't sway.", "bandha": "Full Core Lock"}
+        ]},
+        { "phase": "Cool-Down", "steps": [
+          {"name": "Happy Baby & Shavasana", "time": 180, "desc": "Happy Baby rock → Shavasana with internal body scan.", "bandha": "Full Release"},
+          {"name": "PB: Active Hang", "time": 120, "desc": "Shoulders pulled down (away from ears). Hold. Decompress spine after heavy loads.", "bandha": "Core Tight"}
+        ]}
+      ],
+      // 4: Day 4: Active Recovery – ~30 min (Heavy on RR for release, light PB if needed)
+      [
+        { "phase": "Warm-Up", "steps": [
+          {"name": "Gentle Circles & Tapping", "time": 180, "desc": "Small hip/shoulder circles. Light shoulder tapping.", "bandha": "Minimal"},
+          {"name": "RR: Calves & Hamstrings", "time": 120, "desc": "Sit on floor, roller under legs. Stack legs for more pressure. Roll thoroughly.", "bandha": "Relax"}
+        ]},
+        { "phase": "Main Recovery", "steps": [
+          {"name": "Kundalini Spinal Flex & Ego Eradicator", "time": 480, "desc": "Seated Spinal Flex 3 min with Breath of Fire → Ego Eradicator 2-3 min.", "bandha": "Mula + Uddiyana Active"},
+          {"name": "TCM Lymph Shaking & Tapping", "time": 240, "desc": "Gentle whole-body shake (2 min). Tap key lymph nodes.", "bandha": "No Bandhas"},
+          {"name": "Slow Animal Flow", "time": 240, "desc": "Deliberate Beast Walk → Extended Child's Pose hold.", "bandha": "Light Mula"},
+          {"name": "RR: Adductors (Inner Thigh)", "time": 120, "desc": "Lie prone, leg out to side on roller (frog leg). Roll inner thigh groin to knee.", "bandha": "Deep Release"}
+        ]},
+        { "phase": "Cool-Down", "steps": [
+          {"name": "Supine 4-7-8 Meditation", "time": 240, "desc": "Lie flat: 5 rounds 4-7-8 breathing. Full body scan.", "bandha": "Complete Release"},
+          {"name": "PB: Dead Hang", "time": 60, "desc": "Final spinal decompression.", "bandha": "Release"}
+        ]}
+      ]
+    ];
+
+    const practiceNames = [
+      "The Morning Alchemist (Original)",
+      "Day 1: Upper Body Focus",
+      "Day 2: Lower Body Focus",
+      "Day 3: Full Body Integration",
+      "Day 4: Active Recovery"
+    ];
+
+    const totalTimes = practices.map(p => 
+      p.reduce((total, phase) => total + phase.steps.reduce((t, s) => t + s.time, 0), 0)
+    );
+
+    /* ──────────────────────────────────────────────── */
+    /* STATE & DOM REFERENCES                             */
+    /* ──────────────────────────────────────────────── */
+
+    let currentPracticeIndex = 0;
+    let practice = practices[currentPracticeIndex];
+    let totalTime = totalTimes[currentPracticeIndex];
+    let phaseIndex = 0;
+    let stepIndex = 0;
+    let remaining = practice[0].steps[0].time;
+    let timerInterval = null;
+    let screenWakeLock = null;
+
+    const mainContainer = document.getElementById('mainContainer');
+    const selectionScreen = document.getElementById('selectionScreen');
+    const titleEl = document.getElementById('title');
+    const phaseEl = document.getElementById('phase');
+    const movementEl = document.getElementById('movement');
+    const timerEl = document.getElementById('timer');
+    const descEl = document.getElementById('description');
+    const bandhaEl = document.getElementById('bandha');
+    const nextEl = document.getElementById('next');
+    const progressBar = document.getElementById('progressBar');
+    const progressTime = document.getElementById('progressTime');
+    const btnStart = document.getElementById('btnStart');
+    const btnPause = document.getElementById('btnPause');
+    const videoHack = document.getElementById('wakelock');
+
+    /* ──────────────────────────────────────────────── */
+    /* AUDIO HELPERS                                      */
+    /* ──────────────────────────────────────────────── */
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function tripleBeep() {
+      const now = audioCtx.currentTime;
+      [0, 0.2, 0.4].forEach(delay => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.frequency.value = 880;
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0, now + delay);
+        gain.gain.linearRampToValueAtTime(0.15, now + delay + 0.02);
+        gain.gain.linearRampToValueAtTime(0, now + delay + 0.1);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now + delay);
+        osc.stop(now + delay + 0.15);
+      });
+    }
+
+    function speak(text) {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 0.9;
+      u.pitch = 1;
+      u.lang = 'en-US';
+      window.speechSynthesis.speak(u);
+    }
+
+    /* ──────────────────────────────────────────────── */
+    /* WAKE LOCK & HELPERS                                */
+    /* ──────────────────────────────────────────────── */
+
+    async function requestWakeLock() {
+      try { videoHack.play().catch(() => {}); } catch {}
+      if ('wakeLock' in navigator) {
+        try {
+          screenWakeLock = await navigator.wakeLock.request('screen');
+        } catch {}
+      }
+    }
+
+    function elapsedTime() {
+      let sum = 0;
+      for (let i = 0; i < phaseIndex; i++) {
+        sum += practice[i].steps.reduce((a, s) => a + s.time, 0);
+      }
+      for (let j = 0; j < stepIndex; j++) {
+        sum += practice[phaseIndex].steps[j].time;
+      }
+      sum += practice[phaseIndex].steps[stepIndex].time - remaining;
+      return sum;
+    }
+
+    function updateDisplay() {
+      const currentStep = practice[phaseIndex].steps[stepIndex];
+
+      titleEl.textContent = practiceNames[currentPracticeIndex];
+      phaseEl.textContent = practice[phaseIndex].phase;
+      movementEl.textContent = currentStep.name;
+      descEl.textContent = currentStep.desc;
+      bandhaEl.textContent = currentStep.bandha ? "Focus: " + currentStep.bandha : "";
+      nextEl.textContent = getNextStepName() ? `Next → ${getNextStepName()}` : "";
+
+      const min = Math.floor(remaining / 60).toString().padStart(2, '0');
+      const sec = (remaining % 60).toString().padStart(2, '0');
+      timerEl.textContent = `${min}:${sec}`;
+
+      const progress = (elapsedTime() / totalTime) * 100;
+      progressBar.style.width = `${progress}%`;
+
+      const elMin = Math.floor(elapsedTime() / 60);
+      const elSec = (elapsedTime() % 60).toString().padStart(2, '0');
+      const totMin = Math.floor(totalTime / 60);
+      const totSec = (totalTime % 60).toString().padStart(2, '0');
+      progressTime.textContent = `${elMin}:${elSec} / ${totMin}:${totSec}`;
+    }
+
+    function getNextStepName() {
+      if (stepIndex + 1 < practice[phaseIndex].steps.length) {
+        return practice[phaseIndex].steps[stepIndex + 1].name;
+      }
+      if (phaseIndex + 1 < practice.length) {
+        return practice[phaseIndex + 1].steps[0].name;
+      }
+      return null;
+    }
+
+    /* ──────────────────────────────────────────────── */
+    /* TIMER CONTROLS                                     */
+    /* ──────────────────────────────────────────────── */
+
+    function start() {
+      if (timerInterval) return;
+      audioCtx.resume();
+      requestWakeLock();
+      btnStart.style.display = 'none';
+      btnPause.style.display = 'inline-block';
+
+      if (remaining === practice[phaseIndex].steps[stepIndex].time) {
+        speak(practice[phaseIndex].steps[stepIndex].name);
+      }
+
+      timerInterval = setInterval(() => {
+        remaining--;
+        if (remaining < 0) {
+          next(true);
+        }
+        updateDisplay();
+      }, 1000);
+    }
+
+    function pause() {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      videoHack.pause();
+      if (screenWakeLock) {
+        screenWakeLock.release().then(() => screenWakeLock = null);
+      }
+      btnStart.style.display = 'inline-block';
+      btnPause.style.display = 'none';
+    }
+
+    function reset() {
+      pause();
+      phaseIndex = 0;
+      stepIndex = 0;
+      remaining = practice[0].steps[0].time;
+      updateDisplay();
+    }
+
+    function next(auto = false) {
+      if (auto) tripleBeep();
+
+      stepIndex++;
+      if (stepIndex >= practice[phaseIndex].steps.length) {
+        stepIndex = 0;
+        phaseIndex++;
+        if (phaseIndex >= practice.length) {
+          finishPractice();
+          return;
+        }
+      }
+
+      remaining = practice[phaseIndex].steps[stepIndex].time;
+      speak(practice[phaseIndex].steps[stepIndex].name);
+      if (!auto && audioCtx.state === 'suspended') audioCtx.resume();
+      updateDisplay();
+    }
+
+    function prev() {
+      stepIndex--;
+      if (stepIndex < 0) {
+        phaseIndex--;
+        if (phaseIndex < 0) {
+          phaseIndex = 0;
+          stepIndex = 0;
+        } else {
+          stepIndex = practice[phaseIndex].steps.length - 1;
+        }
+      }
+      remaining = practice[phaseIndex].steps[stepIndex].time;
+      speak(practice[phaseIndex].steps[stepIndex].name);
+      updateDisplay();
+    }
+
+    function finishPractice() {
+      pause();
+      movementEl.textContent = "Session Complete ⚡";
+      descEl.textContent = "State upgraded. Carry the energy forward.";
+      bandhaEl.textContent = "";
+      timerEl.textContent = "Done";
+      nextEl.textContent = "";
+      phaseEl.textContent = "";
+      titleEl.textContent = practiceNames[currentPracticeIndex] + " – Complete";
+      tripleBeep();
+      speak("Session Complete. Well done.");
+    }
+
+    /* ──────────────────────────────────────────────── */
+    /* ROUTINE SELECTION                                  */
+    /* ──────────────────────────────────────────────── */
+
+    function selectPractice(idx) {
+      currentPracticeIndex = idx;
+      practice = practices[idx];
+      totalTime = totalTimes[idx];
+      reset();
+      selectionScreen.style.display = 'none';
+      mainContainer.style.display = 'flex';
+      updateDisplay();
+    }
+
+    function showSelection() {
+      pause();
+      selectionScreen.style.display = 'flex';
+      mainContainer.style.display = 'none';
+    }
+
+    function initSelection() {
+      const container = selectionScreen.querySelector('.controls');
+      practiceNames.forEach((name, i) => {
+        const btn = document.createElement('button');
+        btn.textContent = `${name} (~${Math.floor(totalTimes[i]/60)} min)`;
+        btn.onclick = () => selectPractice(i);
+        container.appendChild(btn);
+      });
+    }
+
+    initSelection();
+    showSelection(); // Start with selection screen
+  </script>
+</body>
+</html>
+```
