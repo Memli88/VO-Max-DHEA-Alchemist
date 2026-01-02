@@ -1,6 +1,6 @@
 // sw.js - Simple Service Worker for offline capability & fast loading
 
-const CACHE_NAME = 'alchemist-v2';
+const CACHE_NAME = 'alchemist-v2.1';
 const ASSETS_TO_CACHE = [
   './',                     // Main HTML file (assuming index.html or whatever your file name is)
   './manifest.json',
